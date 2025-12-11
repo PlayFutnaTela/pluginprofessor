@@ -42,6 +42,7 @@ class SM_Student_Control_Loader {
     private function load_dependencies() {
         // Core plugin classes
         require_once SM_STUDENT_CONTROL_DIR . 'includes/class-sm-student-control-data.php';
+        require_once SM_STUDENT_CONTROL_DIR . 'includes/class-sm-student-control-external-api.php';
         
         // Admin specific classes
         if ( is_admin() ) {

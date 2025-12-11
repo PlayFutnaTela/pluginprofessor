@@ -19,6 +19,10 @@ class SM_Student_Control_Admin {
         add_action('wp_ajax_update_single_student', array($this, 'update_single_student_handler'));
         add_action('wp_ajax_nopriv_update_single_student', array($this, 'restricted_access_handler'));
         add_action('wp_ajax_export_students_excel', array($this, 'export_students_excel_handler'));
+        
+        // Add AJAX handlers for external API integration
+        add_action('wp_ajax_get_classes_by_user', array($this, 'get_classes_by_user_handler'));
+        add_action('wp_ajax_get_assigned_students', array($this, 'get_assigned_students_handler'));
     }
 
     /**
@@ -436,5 +440,159 @@ class SM_Student_Control_Admin {
             error_log('SM Student Control: CSV generation error - ' . $e->getMessage());
             return false;
         }
+    }
+
+    /**
+     * AJAX handler para buscar turmas de um professor
+     * 
+     * Chamada: POST /wp-admin/admin-ajax.php?action=get_classes_by_user
+     * Parâmetros POST:
+     *   - school_id: ID da escola (requerido)
+     *   - user_id: ID do professor (requerido)
+     *   - type: Tipo de filtro (padrão: 1)
+     *   - role_id: ID da função (padrão: 1)
+     *   - security: Nonce para verificação
+     */
+    public function get_classes_by_user_handler() {
+        // Verificar segurança
+        check_ajax_referer('sm_student_control_nonce', 'security');
+
+        // Verificar permissões
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error([
+                'message' => __('Permissão insuficiente', 'sm-student-control'),
+                'code' => 'permission_denied'
+            ]);
+            return;
+        }
+
+        // Validar parâmetros
+        $school_id = isset($_POST['school_id']) ? intval($_POST['school_id']) : 0;
+        $user_id = isset($_POST['user_id']) ? intval($_POST['user_id']) : 0;
+        $type = isset($_POST['type']) ? intval($_POST['type']) : 1;
+        $role_id = isset($_POST['role_id']) ? intval($_POST['role_id']) : 1;
+
+        if (empty($school_id) || empty($user_id)) {
+            wp_send_json_error([
+                'message' => __('school_id e user_id são obrigatórios', 'sm-student-control'),
+                'code' => 'missing_parameters'
+            ]);
+            return;
+        }
+
+        // Carregar classe de integração com API externa
+        require_once SM_STUDENT_CONTROL_DIR . 'includes/class-sm-student-control-external-api.php';
+
+        // Verificar se há dados em cache
+        $cached_data = SM_Student_Control_External_API::get_cached_classes($school_id, $user_id);
+        if ($cached_data) {
+            wp_send_json_success([
+                'data' => $cached_data,
+                'from_cache' => true,
+                'message' => __('Dados recuperados do cache', 'sm-student-control')
+            ]);
+            return;
+        }
+
+        // Buscar turmas da API externa
+        $result = SM_Student_Control_External_API::get_classes_by_user($school_id, $user_id, $type, $role_id);
+
+        // Verificar se há erro
+        if (is_wp_error($result)) {
+            wp_send_json_error([
+                'message' => $result->get_error_message(),
+                'code' => $result->get_error_code()
+            ]);
+            return;
+        }
+
+        // Cache os dados por 1 hora
+        SM_Student_Control_External_API::cache_classes($school_id, $user_id, $result, 3600);
+
+        // Retornar dados
+        wp_send_json_success([
+            'data' => $result,
+            'from_cache' => false,
+            'message' => __('Turmas recuperadas com sucesso da API', 'sm-student-control')
+        ]);
+    }
+
+    /**
+     * AJAX handler para buscar alunos matriculados em uma turma
+     * 
+     * Chamada: POST /wp-admin/admin-ajax.php?action=get_assigned_students
+     * Parâmetros POST:
+     *   - class_id: ID da turma (requerido)
+     *   - limit: Limite de registros por página (padrão: 20)
+     *   - page: Número da página (padrão: 1)
+     *   - security: Nonce para verificação
+     */
+    public function get_assigned_students_handler() {
+        // Verificar segurança
+        check_ajax_referer('sm_student_control_nonce', 'security');
+
+        // Verificar permissões
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error([
+                'message' => __('Permissão insuficiente', 'sm-student-control'),
+                'code' => 'permission_denied'
+            ]);
+            return;
+        }
+
+        // Validar parâmetros
+        $class_id = isset($_POST['class_id']) ? intval($_POST['class_id']) : 0;
+        $limit = isset($_POST['limit']) ? intval($_POST['limit']) : 20;
+        $page = isset($_POST['page']) ? intval($_POST['page']) : 1;
+
+        if (empty($class_id)) {
+            wp_send_json_error([
+                'message' => __('class_id é obrigatório', 'sm-student-control'),
+                'code' => 'missing_parameters'
+            ]);
+            return;
+        }
+
+        // Validar valores
+        $limit = max(1, min($limit, 100)); // Entre 1 e 100
+        $page = max(1, $page);
+
+        // Carregar classe de integração com API externa
+        require_once SM_STUDENT_CONTROL_DIR . 'includes/class-sm-student-control-external-api.php';
+
+        // Verificar se há dados em cache
+        $cached_data = SM_Student_Control_External_API::get_cached_class_students($class_id);
+        if ($cached_data) {
+            wp_send_json_success([
+                'data' => $cached_data,
+                'from_cache' => true,
+                'class_id' => $class_id,
+                'message' => __('Alunos recuperados do cache', 'sm-student-control')
+            ]);
+            return;
+        }
+
+        // Buscar alunos da API externa
+        $result = SM_Student_Control_External_API::get_assigned_students($class_id, $limit, $page);
+
+        // Verificar se há erro
+        if (is_wp_error($result)) {
+            wp_send_json_error([
+                'message' => $result->get_error_message(),
+                'code' => $result->get_error_code()
+            ]);
+            return;
+        }
+
+        // Cache os dados por 1 hora
+        SM_Student_Control_External_API::cache_class_students($class_id, $result, 3600);
+
+        // Retornar dados
+        wp_send_json_success([
+            'data' => $result,
+            'from_cache' => false,
+            'class_id' => $class_id,
+            'message' => __('Alunos recuperados com sucesso da API', 'sm-student-control')
+        ]);
     }
 }
