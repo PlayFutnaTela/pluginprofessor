@@ -99,11 +99,20 @@ class SM_Student_Control_Shortcode_Handler {
             );
         }
 
+        // Handlebars (para templates)
+        wp_enqueue_script(
+            'handlebars',
+            'https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.7.7/handlebars.min.js',
+            [],
+            '4.7.7',
+            false
+        );
+
         // JavaScript
         wp_enqueue_script(
             'sm-sc-frontend-app',
             SM_STUDENT_CONTROL_URL . 'frontend/assets/js/frontend-app.js',
-            ['jquery'],
+            ['jquery', 'handlebars'],
             SM_STUDENT_CONTROL_VERSION,
             true
         );
@@ -301,11 +310,32 @@ class SM_Student_Control_Shortcode_Handler {
             'per_page' => intval($_POST['per_page'] ?? 20),
         ];
 
-        $students = SM_Student_Control_Professor_Students::get_professor_students(
+        // Calcular offset
+        $args['offset'] = ($args['page'] - 1) * $args['per_page'];
+        $args['limit'] = $args['per_page'];
+
+        $students_raw = SM_Student_Control_Professor_Students::get_professor_students(
             $professor_data['school_id'],
             $professor_data['professor_id'],
             $args
         );
+
+        // Transformar dados para a tabela
+        $students = [];
+        if (!empty($students_raw)) {
+            foreach ($students_raw as $student) {
+                $students[] = [
+                    'id' => isset($student['id']) ? $student['id'] : (isset($student['student_id']) ? $student['student_id'] : 0),
+                    'display_name' => isset($student['display_name']) ? $student['display_name'] : (isset($student['name']) ? $student['name'] : 'N/A'),
+                    'user_email' => isset($student['user_email']) ? $student['user_email'] : (isset($student['email']) ? $student['email'] : ''),
+                    'avatar' => isset($student['avatar']) ? $student['avatar'] : '',
+                    'progress' => isset($student['progress_percent']) ? intval($student['progress_percent']) : (isset($student['progress']) ? intval($student['progress']) : 0),
+                    'courses_count' => isset($student['courses']) ? count($student['courses']) : 0,
+                    'current_course' => isset($student['current_course']) ? $student['current_course'] : '',
+                    'last_login' => isset($student['last_login']) ? $student['last_login'] : '',
+                ];
+            }
+        }
 
         $total_students = SM_Student_Control_Professor_Students::count_professor_students(
             $professor_data['school_id'],

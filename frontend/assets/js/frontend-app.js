@@ -152,11 +152,13 @@
         this.currentPage = page;
 
         var self = this;
-        var $list = $('.sm-sc-students-list');
+        var $tableLoading = $('#sm-sc-table-loading');
+        var $tableEmpty = $('#sm-sc-table-empty');
         var $pagination = $('.sm-sc-pagination');
 
         // Mostrar loading
-        $list.html('<div class="sm-sc-loading-message"><div class="sm-sc-spinner"></div><p>' + SMSC.strings.loading + '</p></div>');
+        $tableLoading.show();
+        $tableEmpty.hide();
         $pagination.hide();
 
         // Preparar dados
@@ -186,6 +188,7 @@
                 self.showError(SMSC.strings.error);
             },
             complete: function() {
+                $tableLoading.hide();
                 self.isLoading = false;
             }
         });
@@ -193,12 +196,21 @@
 
     // Renderizar estudantes
     SMSC.renderStudents = function(students) {
-        var $list = $('.sm-sc-students-list');
+        var $tbody = $('#sm-sc-students-tbody');
+        var $tableEmpty = $('#sm-sc-table-empty');
+        var $table = $('.sm-sc-students-table');
 
         if (!students || students.length === 0) {
-            $list.html('<div class="sm-sc-no-students"><div class="sm-sc-no-students-icon"><span class="dashicons dashicons-groups"></span></div><h3>Nenhum aluno encontrado</h3><p>Não há alunos que correspondam aos filtros aplicados.</p></div>');
+            // Mostrar tabela vazia
+            $tbody.html('');
+            $table.hide();
+            $tableEmpty.show();
             return;
         }
+
+        // Ocultar mensagem de vazio e mostrar tabela
+        $tableEmpty.hide();
+        $table.show();
 
         // Processar dados dos estudantes
         students = students.map(function(student) {
@@ -222,7 +234,7 @@
                 return this.studentRowTemplate(student);
             }, this).join('');
 
-            $list.html(html);
+            $tbody.html(html);
         } else {
             // Fallback sem Handlebars
             this.renderStudentsFallback(students);
@@ -231,47 +243,45 @@
 
     // Renderizar estudantes (fallback sem Handlebars)
     SMSC.renderStudentsFallback = function(students) {
-        var $list = $('.sm-sc-students-list');
+        var $tbody = $('#sm-sc-students-tbody');
         var html = '';
 
         students.forEach(function(student) {
-            html += '<div class="sm-sc-student-row" data-student-id="' + student.id + '">' +
-                '<div class="sm-sc-student-avatar">' +
+            html += '<tr class="sm-sc-student-row" data-student-id="' + student.id + '">' +
+                '<td class="sm-sc-col-avatar">' +
                     (student.avatar ? '<img src="' + student.avatar + '" alt="' + student.display_name + '" class="sm-sc-avatar">' :
                      '<div class="sm-sc-avatar-placeholder">' + student.initials + '</div>') +
-                '</div>' +
-                '<div class="sm-sc-student-info">' +
+                '</td>' +
+                '<td class="sm-sc-col-name">' +
                     '<div class="sm-sc-student-name">' +
                         '<a href="#" class="sm-sc-student-link" data-student-id="' + student.id + '">' + student.display_name + '</a>' +
                     '</div>' +
-                    '<div class="sm-sc-student-email">' + student.user_email + '</div>' +
-                    '<div class="sm-sc-student-meta">' +
-                        '<span class="sm-sc-student-id">ID: ' + student.id + '</span>' +
-                        (student.last_login ? '<span class="sm-sc-last-login">Último acesso: ' + student.last_login_formatted + '</span>' : '') +
-                    '</div>' +
-                '</div>' +
-                '<div class="sm-sc-student-progress">' +
+                '</td>' +
+                '<td class="sm-sc-col-email">' +
+                    '<span class="sm-sc-student-email">' + student.user_email + '</span>' +
+                '</td>' +
+                '<td class="sm-sc-col-progress">' +
                     '<div class="sm-sc-progress-bar">' +
                         '<div class="sm-sc-progress-fill" style="width: ' + student.progress + '%"></div>' +
                     '</div>' +
                     '<div class="sm-sc-progress-text">' + student.progress + '%</div>' +
-                '</div>' +
-                '<div class="sm-sc-student-courses">' +
+                '</td>' +
+                '<td class="sm-sc-col-courses">' +
                     '<div class="sm-sc-courses-count">' + student.courses_count + ' cursos</div>' +
                     (student.current_course ? '<div class="sm-sc-current-course">' + student.current_course + '</div>' : '') +
-                '</div>' +
-                '<div class="sm-sc-student-actions">' +
+                '</td>' +
+                '<td class="sm-sc-col-actions">' +
                     '<button type="button" class="button small sm-sc-view-details" data-student-id="' + student.id + '" title="Ver detalhes">' +
                         '<span class="dashicons dashicons-visibility"></span>' +
                     '</button>' +
                     '<button type="button" class="button small secondary sm-sc-refresh-cache" data-student-id="' + student.id + '" title="Atualizar cache">' +
                         '<span class="dashicons dashicons-update"></span>' +
                     '</button>' +
-                '</div>' +
-            '</div>';
+                '</td>' +
+            '</tr>';
         });
 
-        $list.html(html);
+        $tbody.html(html);
     };
 
     // Renderizar paginação

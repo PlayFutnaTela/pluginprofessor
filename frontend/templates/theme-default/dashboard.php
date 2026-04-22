@@ -139,10 +139,41 @@ if (!isset($professor_data) || !isset($atts)) {
                 </div>
             </div>
 
-            <div class="sm-sc-students-list" id="sm-sc-students-list">
-                <div class="sm-sc-loading-message">
-                    <div class="sm-sc-spinner"></div>
-                    <p><?php _e('Carregando alunos...', 'sm-student-control'); ?></p>
+            <!-- Tabela de Alunos -->
+            <div class="sm-sc-students-table-wrapper">
+                <table class="sm-sc-students-table">
+                    <thead>
+                        <tr>
+                            <th class="sm-sc-col-avatar"></th>
+                            <th class="sm-sc-col-name"><?php _e('Nome', 'sm-student-control'); ?></th>
+                            <th class="sm-sc-col-email"><?php _e('Email', 'sm-student-control'); ?></th>
+                            <th class="sm-sc-col-progress"><?php _e('Progresso', 'sm-student-control'); ?></th>
+                            <th class="sm-sc-col-courses"><?php _e('Cursos', 'sm-student-control'); ?></th>
+                            <th class="sm-sc-col-actions"><?php _e('Ações', 'sm-student-control'); ?></th>
+                        </tr>
+                    </thead>
+                    <tbody id="sm-sc-students-tbody">
+                        <!-- Linhas de alunos serão inseridas aqui via JavaScript -->
+                    </tbody>
+                </table>
+
+                <!-- Mensagem de Tabela Vazia -->
+                <div class="sm-sc-table-empty" id="sm-sc-table-empty" style="display: none;">
+                    <div class="sm-sc-empty-state">
+                        <div class="sm-sc-empty-icon">
+                            <span class="dashicons dashicons-search"></span>
+                        </div>
+                        <h3><?php _e('Nenhum Aluno Encontrado', 'sm-student-control'); ?></h3>
+                        <p><?php _e('Não há alunos que correspondam aos critérios de busca e filtro selecionados.', 'sm-student-control'); ?></p>
+                    </div>
+                </div>
+
+                <!-- Mensagem de Carregamento -->
+                <div class="sm-sc-table-loading" id="sm-sc-table-loading">
+                    <div class="sm-sc-loading-message">
+                        <div class="sm-sc-spinner"></div>
+                        <p><?php _e('Carregando alunos...', 'sm-student-control'); ?></p>
+                    </div>
                 </div>
             </div>
 
@@ -188,8 +219,8 @@ if (!isset($professor_data) || !isset($atts)) {
 
 <!-- Templates Handlebars para renderização dinâmica -->
 <script type="text/x-handlebars-template" id="sm-sc-student-row-template">
-    <div class="sm-sc-student-row" data-student-id="{{id}}">
-        <div class="sm-sc-student-avatar">
+    <tr class="sm-sc-student-row" data-student-id="{{id}}">
+        <td class="sm-sc-col-avatar">
             {{#if avatar}}
                 <img src="{{avatar}}" alt="{{display_name}}" class="sm-sc-avatar">
             {{else}}
@@ -197,50 +228,40 @@ if (!isset($professor_data) || !isset($atts)) {
                     {{initials}}
                 </div>
             {{/if}}
-        </div>
-
-        <div class="sm-sc-student-info">
+        </td>
+        <td class="sm-sc-col-name">
             <div class="sm-sc-student-name">
                 <a href="#" class="sm-sc-student-link" data-student-id="{{id}}">
                     {{display_name}}
                 </a>
             </div>
-            <div class="sm-sc-student-email">{{user_email}}</div>
-            <div class="sm-sc-student-meta">
-                <span class="sm-sc-student-id">ID: {{id}}</span>
-                {{#if last_login}}
-                    <span class="sm-sc-last-login">
-                        <?php _e('Último acesso:', 'sm-student-control'); ?> {{last_login_formatted}}
-                    </span>
-                {{/if}}
-            </div>
-        </div>
-
-        <div class="sm-sc-student-progress">
+        </td>
+        <td class="sm-sc-col-email">
+            <span class="sm-sc-student-email">{{user_email}}</span>
+        </td>
+        <td class="sm-sc-col-progress">
             <div class="sm-sc-progress-bar">
                 <div class="sm-sc-progress-fill" style="width: {{progress}}%"></div>
             </div>
             <div class="sm-sc-progress-text">{{progress}}%</div>
-        </div>
-
-        <div class="sm-sc-student-courses">
+        </td>
+        <td class="sm-sc-col-courses">
             <div class="sm-sc-courses-count">
                 {{courses_count}} <?php _e('cursos', 'sm-student-control'); ?>
             </div>
             {{#if current_course}}
                 <div class="sm-sc-current-course">{{current_course}}</div>
             {{/if}}
-        </div>
-
-        <div class="sm-sc-student-actions">
+        </td>
+        <td class="sm-sc-col-actions">
             <button type="button" class="button small sm-sc-view-details" data-student-id="{{id}}" title="<?php esc_attr_e('Ver detalhes', 'sm-student-control'); ?>">
                 <span class="dashicons dashicons-visibility"></span>
             </button>
             <button type="button" class="button small secondary sm-sc-refresh-cache" data-student-id="{{id}}" title="<?php esc_attr_e('Atualizar cache', 'sm-student-control'); ?>">
                 <span class="dashicons dashicons-update"></span>
             </button>
-        </div>
-    </div>
+        </td>
+    </tr>
 </script>
 
 <script type="text/x-handlebars-template" id="sm-sc-student-details-template">

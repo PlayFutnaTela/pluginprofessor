@@ -279,46 +279,48 @@
     100% { transform: rotate(360deg); }
 }
 
-/* Student Row */
-.sm-sc-student-row {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 1rem;
-    border: 1px solid #e1e1e1;
-    border-radius: 8px;
-    margin-bottom: 0.5rem;
+/* Student Row - Tabela */
+.sm-sc-students-table tbody tr.sm-sc-student-row {
+    display: table-row;
+    border: none;
+    padding: 0;
+    border-radius: 0;
+    margin-bottom: 0;
     background: white;
     transition: all 0.2s ease;
 }
 
-.sm-sc-student-row:hover {
-    border-color: #007cba;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+.sm-sc-students-table tbody tr.sm-sc-student-row:hover {
+    background: #f8f9fa;
+    box-shadow: none;
+    border-color: inherit;
 }
 
 .sm-sc-student-avatar {
+    width: 48px;
+    height: 48px;
     flex-shrink: 0;
 }
 
 .sm-sc-avatar {
-    width: 48px;
-    height: 48px;
+    width: 100%;
+    height: 100%;
     border-radius: 50%;
     object-fit: cover;
+    border: 2px solid #e1e1e1;
 }
 
 .sm-sc-avatar-placeholder {
-    width: 48px;
-    height: 48px;
+    width: 100%;
+    height: 100%;
     border-radius: 50%;
-    background: var(--primary-color, #007cba);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 600;
-    font-size: 1.1rem;
+    font-size: 1rem;
 }
 
 .sm-sc-student-info {
@@ -359,26 +361,6 @@
     flex: 0 0 150px;
 }
 
-.sm-sc-progress-bar {
-    background: #e1e1e1;
-    border-radius: 4px;
-    height: 8px;
-    overflow: hidden;
-    margin-bottom: 0.25rem;
-}
-
-.sm-sc-progress-fill {
-    height: 100%;
-    background: var(--primary-color, #007cba);
-    transition: width 0.3s ease;
-}
-
-.sm-sc-progress-text {
-    font-size: 0.8rem;
-    color: #666;
-    text-align: center;
-}
-
 .sm-sc-student-courses {
     flex: 0 0 120px;
     text-align: center;
@@ -397,6 +379,174 @@
 .sm-sc-student-actions {
     display: flex;
     gap: 0.25rem;
+}
+
+/* Tabela de Alunos */
+.sm-sc-students-table-wrapper {
+    background: white;
+    border: 1px solid #e1e1e1;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+}
+
+.sm-sc-students-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+}
+
+.sm-sc-students-table thead {
+    background: #f8f9fa;
+    border-bottom: 2px solid #e1e1e1;
+}
+
+.sm-sc-students-table th {
+    padding: 1rem;
+    text-align: left;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #333;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.sm-sc-students-table tbody tr {
+    border-bottom: 1px solid #e1e1e1;
+    transition: all 0.2s ease;
+}
+
+.sm-sc-students-table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+.sm-sc-students-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.sm-sc-students-table td {
+    padding: 1rem;
+    vertical-align: middle;
+}
+
+.sm-sc-col-avatar {
+    width: 50px;
+    text-align: center;
+}
+
+.sm-sc-col-name {
+    min-width: 200px;
+    font-weight: 500;
+}
+
+.sm-sc-col-email {
+    min-width: 200px;
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.sm-sc-col-progress {
+    min-width: 150px;
+}
+
+.sm-sc-col-courses {
+    min-width: 100px;
+    text-align: center;
+}
+
+.sm-sc-col-actions {
+    width: 100px;
+    text-align: center;
+}
+
+/* Avatar na Tabela */
+.sm-sc-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #e1e1e1;
+}
+
+.sm-sc-avatar-placeholder {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+/* Progress Bar na Tabela */
+.sm-sc-progress-bar {
+    width: 100%;
+    height: 6px;
+    background: #e1e1e1;
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.sm-sc-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+.sm-sc-progress-text {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #333;
+}
+
+/* Tabela Vazia */
+.sm-sc-table-empty {
+    background: white;
+    border: 1px solid #e1e1e1;
+    border-radius: 8px;
+    padding: 3rem;
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.sm-sc-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.sm-sc-empty-icon {
+    font-size: 3rem;
+    color: #ccc;
+}
+
+.sm-sc-table-empty h3 {
+    margin: 0;
+    color: #333;
+    font-size: 1.25rem;
+}
+
+.sm-sc-table-empty p {
+    margin: 0;
+    color: #666;
+    font-size: 0.95rem;
+}
+
+/* Tabela Carregando */
+.sm-sc-table-loading {
+    background: white;
+    border: 1px solid #e1e1e1;
+    border-radius: 8px;
+    padding: 2rem;
+    text-align: center;
+    margin-bottom: 1.5rem;
 }
 
 /* Pagination */
