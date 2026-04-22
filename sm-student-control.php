@@ -57,9 +57,15 @@ register_deactivation_hook(__FILE__, 'sm_student_control_deactivate');
 function sm_student_control_activate() {
     error_log('[SM-SC] 🔧 Iniciando ativação do plugin');
 
+    // Carregar dependências durante ativação
+    require_once SM_STUDENT_CONTROL_DIR . 'includes/class-loader.php';
+    error_log('[SM-SC] 📦 Dependências carregadas');
+
     // Criar tabelas se necessário
-    SM_Student_Control_Loader::activate();
-    error_log('[SM-SC] 🗄️ Tabelas criadas/atualizadas');
+    if (method_exists('SM_Student_Control_Loader', 'activate')) {
+        SM_Student_Control_Loader::activate();
+        error_log('[SM-SC] 🗄️ Tabelas criadas/atualizadas');
+    }
 
     // Definir configurações padrão
     $default_settings = array(
@@ -89,9 +95,14 @@ function sm_student_control_activate() {
 function sm_student_control_deactivate() {
     error_log('[SM-SC] 🛑 Iniciando desativação do plugin');
 
+    // Carregar dependências durante desativação
+    require_once SM_STUDENT_CONTROL_DIR . 'includes/class-loader.php';
+    
     // Limpar cache
-    SM_Student_Control_Loader::deactivate();
-    error_log('[SM-SC] 🧹 Cache limpo durante desativação');
+    if (method_exists('SM_Student_Control_Loader', 'deactivate')) {
+        SM_Student_Control_Loader::deactivate();
+        error_log('[SM-SC] 🧹 Cache limpo durante desativação');
+    }
 
     // Flush rewrite rules
     flush_rewrite_rules();
