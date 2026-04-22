@@ -253,6 +253,38 @@ class SM_Student_Control_Professor_Students {
     }
 
     /**
+     * Obter cursos de um professor
+     */
+    public static function get_professor_courses($school_id, $professor_id) {
+        // Obter todos os alunos do professor
+        $students = self::get_professor_students($school_id, $professor_id, ['limit' => 0]);
+
+        $courses = [];
+        $course_ids = [];
+
+        // Extrair cursos únicos dos alunos
+        foreach ($students as $student) {
+            if (!empty($student['courses']) && is_array($student['courses'])) {
+                foreach ($student['courses'] as $course) {
+                    $course_id = isset($course['id']) ? $course['id'] : null;
+                    
+                    if ($course_id && !in_array($course_id, $course_ids)) {
+                        $course_ids[] = $course_id;
+                        $courses[] = [
+                            'id' => $course_id,
+                            'title' => isset($course['title']) ? $course['title'] : 'Sem título',
+                            'description' => isset($course['description']) ? $course['description'] : '',
+                            'status' => isset($course['status']) ? $course['status'] : 'active',
+                        ];
+                    }
+                }
+            }
+        }
+
+        return $courses;
+    }
+
+    /**
      * Obter alunos por curso
      */
     public static function get_students_by_course($school_id, $professor_id, $course_id) {

@@ -296,11 +296,24 @@ class SM_Student_Control_Shortcode_Handler {
      * AJAX: Carregar estudantes
      */
     public static function ajax_load_students() {
-        check_ajax_referer('sm_sc_frontend_nonce', 'nonce');
+        // Verificar nonce com segurança
+        $nonce = isset($_POST['nonce']) ? $_POST['nonce'] : '';
+        if (!wp_verify_nonce($nonce, 'sm_sc_frontend_nonce')) {
+            wp_send_json_error(__('Nonce inválido', 'sm-student-control'), 403);
+        }
 
-        $professor_data = SM_Student_Control_JWT::get_professor_data();
-        if (!$professor_data) {
-            wp_send_json_error(__('Acesso negado', 'sm-student-control'));
+        try {
+            if (!class_exists('SM_Student_Control_JWT')) {
+                wp_send_json_error(__('Classe JWT não carregada', 'sm-student-control'), 500);
+            }
+
+            $professor_data = SM_Student_Control_JWT::get_professor_data();
+            if (!$professor_data) {
+                wp_send_json_error(__('Acesso negado', 'sm-student-control'), 403);
+            }
+        } catch (Exception $e) {
+            error_log('[SM-SC-AJAX] Erro ao obter dados do professor: ' . $e->getMessage());
+            wp_send_json_error(__('Erro ao carregar dados', 'sm-student-control'), 500);
         }
 
         $args = [
@@ -314,41 +327,50 @@ class SM_Student_Control_Shortcode_Handler {
         $args['offset'] = ($args['page'] - 1) * $args['per_page'];
         $args['limit'] = $args['per_page'];
 
-        $students_raw = SM_Student_Control_Professor_Students::get_professor_students(
-            $professor_data['school_id'],
-            $professor_data['professor_id'],
-            $args
-        );
-
-        // Transformar dados para a tabela
-        $students = [];
-        if (!empty($students_raw)) {
-            foreach ($students_raw as $student) {
-                $students[] = [
-                    'id' => isset($student['id']) ? $student['id'] : (isset($student['student_id']) ? $student['student_id'] : 0),
-                    'display_name' => isset($student['display_name']) ? $student['display_name'] : (isset($student['name']) ? $student['name'] : 'N/A'),
-                    'user_email' => isset($student['user_email']) ? $student['user_email'] : (isset($student['email']) ? $student['email'] : ''),
-                    'avatar' => isset($student['avatar']) ? $student['avatar'] : '',
-                    'progress' => isset($student['progress_percent']) ? intval($student['progress_percent']) : (isset($student['progress']) ? intval($student['progress']) : 0),
-                    'courses_count' => isset($student['courses']) ? count($student['courses']) : 0,
-                    'current_course' => isset($student['current_course']) ? $student['current_course'] : '',
-                    'last_login' => isset($student['last_login']) ? $student['last_login'] : '',
-                ];
+        try {
+            if (!class_exists('SM_Student_Control_Professor_Students')) {
+                wp_send_json_error(__('Classe de Professores não carregada', 'sm-student-control'), 500);
             }
+
+            $students_raw = SM_Student_Control_Professor_Students::get_professor_students(
+                $professor_data['school_id'],
+                $professor_data['professor_id'],
+                $args
+            );
+
+            // Transformar dados para a tabela
+            $students = [];
+            if (!empty($students_raw)) {
+                foreach ($students_raw as $student) {
+                    $students[] = [
+                        'id' => isset($student['id']) ? $student['id'] : (isset($student['student_id']) ? $student['student_id'] : 0),
+                        'display_name' => isset($student['display_name']) ? $student['display_name'] : (isset($student['name']) ? $student['name'] : 'N/A'),
+                        'user_email' => isset($student['user_email']) ? $student['user_email'] : (isset($student['email']) ? $student['email'] : ''),
+                        'avatar' => isset($student['avatar']) ? $student['avatar'] : '',
+                        'progress' => isset($student['progress_percent']) ? intval($student['progress_percent']) : (isset($student['progress']) ? intval($student['progress']) : 0),
+                        'courses_count' => isset($student['courses']) ? count($student['courses']) : 0,
+                        'current_course' => isset($student['current_course']) ? $student['current_course'] : '',
+                        'last_login' => isset($student['last_login']) ? $student['last_login'] : '',
+                    ];
+                }
+            }
+
+            $total_students = SM_Student_Control_Professor_Students::count_professor_students(
+                $professor_data['school_id'],
+                $professor_data['professor_id']
+            );
+
+            wp_send_json_success([
+                'students' => $students,
+                'total' => $total_students,
+                'page' => $args['page'],
+                'per_page' => $args['per_page'],
+                'total_pages' => ceil($total_students / $args['per_page']),
+            ]);
+        } catch (Exception $e) {
+            error_log('[SM-SC-AJAX] Erro ao carregar estudantes: ' . $e->getMessage());
+            wp_send_json_error(__('Erro ao carregar estudantes: ' . $e->getMessage(), 'sm-student-control'), 500);
         }
-
-        $total_students = SM_Student_Control_Professor_Students::count_professor_students(
-            $professor_data['school_id'],
-            $professor_data['professor_id']
-        );
-
-        wp_send_json_success([
-            'students' => $students,
-            'total' => $total_students,
-            'page' => $args['page'],
-            'per_page' => $args['per_page'],
-            'total_pages' => ceil($total_students / $args['per_page']),
-        ]);
     }
 
     /**
